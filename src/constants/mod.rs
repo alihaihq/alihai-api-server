@@ -3,7 +3,7 @@ use std::net::Ipv4Addr;
 
 pub mod env;
 
-pub const SENDGRID_API_ENDPOINT: &'static str = "https://api.sendgrid.com/v3/mail/send";
+pub const IP_API_ENDPOINT: &'static str = "http://ip-api.com/json/";
 
 pub const SERVER_DEFAULT_IP: IpAddr = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
 pub const SERVER_DEFAULT_PORT: u16 = 3001;

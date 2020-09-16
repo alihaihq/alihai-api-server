@@ -1,78 +1,41 @@
 use crate::constants;
 use crate::http_client;
 use crate::prelude::*;
-use crate::routes::api::v1::types::ContactUsInput;
-use crate::utils;
-use serde_json::{json, Value};
+use crate::routes::api::v1::types::ClientGeoLocation;
+use serde_json::Value;
+use std::net::IpAddr;
+use url::Url;
 
-pub async fn send_mail(config: &Value) -> crate::Result<()> {
+pub async fn fetch_geo_location_from_ip(ip: IpAddr) -> crate::Result<ClientGeoLocation> {
+    let api_url = constants::IP_API_ENDPOINT
+        .parse::<Url>()
+        .unwrap()
+        .join(&ip.to_string())
+        .context("Failed to parse the IP")?;
+
     let resp = http_client::client()
-        .post(constants::SENDGRID_API_ENDPOINT)
-        .bearer_auth(utils::env_crit(constants::env::SENDGRID_API_KEY))
-        .header("Content-Type", "application/json")
-        .json(config)
+        .get(api_url)
         .send()
         .await
-        .context("Failed to send mail request to SendGrid API server")?;
+        .context("Failed to send request to IP server")?
+        .shake("Fetch Geo Location From IP")
+        .await?
+        .json::<Value>()
+        .await
+        .context("Failed to decode response to JSON")?;
 
-    let is_error = resp.error_for_status_ref().is_err();
+    let status = resp["status"]
+        .as_str()
+        .ok_or_else(|| crate::Error::new("No status field"))?;
 
-    if is_error {
-        let status_code = resp.status();
-        let err_msg = resp
-            .text()
-            .await
-            .context("Couldn't extract send mail error response as text")?;
-
-        Err(crate::Error::new(format!(
-            "Failed to send mail: {}, Status: {}",
-            err_msg, status_code
-        )))
-    } else {
-        Ok(())
+    if status == "fail" {
+        return Err(crate::Error::new(resp["message"].as_str().unwrap_or("")));
     }
-}
 
-pub async fn send_contact_us_form(data: ContactUsInput) -> crate::Result<()> {
-    let mail_text = format!(
-        r"
-        <html>
-        <body>
-            Email: {},
-            <br/>
-            Mobile: {},
-            <br/>
-            Message: {}
-        </body>
-        </html>
-    ",
-        &data.email, &data.mobile, &data.message
-    );
-
-    let mail_config = json!({
-        "personalizations": [
-            {
-                "to": [
-                    {
-                        "email": "rousanali786@gmail.com"
-                    },
-                    {
-                        "email": "alihaistore@gmail.com"
-                    }
-                ]
-            }
-        ],
-        "from": {
-            "email": data.email
-        },
-        "subject": "Alihai Customer Message",
-        "content": [
-            {
-                "type": "text/html",
-                "value": mail_text
-            }
-        ]
-    });
-
-    send_mail(&mail_config).await
+    Ok(ClientGeoLocation {
+        country: resp["country"].as_str().unwrap_or("").to_owned(),
+        region: resp["regionName"].as_str().unwrap_or("").to_owned(),
+        city: resp["city"].as_str().unwrap_or("").to_owned(),
+        pin_code: resp["zip"].as_str().unwrap_or("").to_owned(),
+    })
 }
