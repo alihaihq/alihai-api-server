@@ -1,0 +1,16 @@
+[Unit]
+Description=Alihai: The central API service for the Alihai organization.
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/home/rousan/Deployments/alihai
+ExecStart=/home/rousan/Deployments/alihai/alihai-api-server
+
+Environment="HOST=0.0.0.0"
+Environment="PORT=7777"
+Environment="LOG_LEVEL=INFO"
+Environment="GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/AKfycbxS_aG0ciJVEcSwAJcg4z6IdU76wx7fgjgr5Jns9tk-5G7FnWWI/exec"
+
+[Install]
+WantedBy=multi-user.target

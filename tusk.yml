@@ -15,7 +15,5 @@ tasks:
     run:
       - tusk build:linux
       - echo "Deploying to the Lab"
-      - scp ./dist/alihai rousan@lab.rousan.io:~/Deployments/alihai/api-server/alihai-api-server
-      - scp ./.env rousan@lab.rousan.io:~/Deployments/alihai/api-server/.env
-      - echo "Transferred at ~/Deployments/alihai/api-server on the Lab"
-      - echo "Please run the server executable"
+      - scp ./dist/alihai rousan@lab.rousan.io:~/Deployments/alihai/alihai-api-server
+      - echo "Deployed at ~/Deployments/alihai/alihai-api-server on the Lab"
