@@ -2,10 +2,20 @@ tasks:
   setup:
     run:
       - command: cargo install cargo-watch
+      - command: cargo install --version 0.1.16 cross
   dev:
     run:
       - command: cargo watch --watch ./src -x run
-  start:
+  build:linux:
     run:
-      - command: cargo build --release
-      - command: ./target/release/alihai
+      - command: cross build --release --target x86_64-unknown-linux-gnu
+      - command: mkdir -p dist
+      - command: cp ./target/x86_64-unknown-linux-gnu/release/alihai ./dist/alihai
+  deploy:
+    run:
+      - tusk build:linux
+      - echo "Deploying to the Lab"
+      - scp ./dist/alihai rousan@lab.rousan.io:~/Deployments/alihai/api-server/alihai-api-server
+      - scp ./.env rousan@lab.rousan.io:~/Deployments/alihai/api-server/.env
+      - echo "Transferred at ~/Deployments/alihai/api-server on the Lab"
+      - echo "Please run the server executable"

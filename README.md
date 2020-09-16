@@ -30,4 +30,10 @@ Start the prod server:
 tusk start
 ```
 
+Deploy the prod server:
+
+```sh
+tusk deploy
+```
+
 Please refer to `tusk.yml` file for more commands.
